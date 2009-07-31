@@ -83,13 +83,16 @@ class EncryptedField(Field):
         super(EncryptedField,self).__init__(**kwargs)
     def encode(self,value):  
         padding = 16*(len(value)/16)+16
-        v = self.__c.encrypt(value.ljust(padding,'\x00'))
+        npad = '%x' % (padding - len(value)-1)
+        pad = '\x00'*int(npad,16)   
+        v = self.__c.encrypt(value+pad+npad)
         v = base64.encodestring(v)
         return unicode(v)
     def decode(self,value):
         v = base64.decodestring(value)
         v = self.__c.decrypt(v)
-        return v.strip('\x00')
+        npad = int(v[-1:],16)+1
+        return v[:-npad]
         
  
 class Model(object):
@@ -112,7 +115,10 @@ class Model(object):
         self.req_fields = []
         self.field_objs = {}
         self.refs = {}
-        for attr_name in map(unicode,dir(self)):
+        attrs = map(unicode,dir(self))
+        if "__hash_key__" not in attrs:
+            raise Exception("Required field '__hash_key__' is not set.")
+        for attr_name in attrs:
             if attr_name == u"ID":
                 continue
             attr = getattr(self,attr_name)
@@ -141,6 +147,8 @@ class Model(object):
                     self.setField(k,v)
                 else:
                     raise Exception("Undefined field '%s' for class '%s'" % (k,self.__class__.__name__))
+        else:
+            pass
     def checkFields(self):
         for field in self.req_fields:
             if not getattr(self,field):
@@ -163,7 +171,7 @@ class Model(object):
         self.__dict = {}
         # Go through each field and encode the values
         for field in self.fields:
-            value = self[field]
+            value = self[field] 
             field_obj = self.field_objs[field]
             encoded_value = field_obj.encode(value)
             if encoded_value == u"": # Don't try to split empty strings
@@ -189,7 +197,9 @@ class Model(object):
         sdb = boto.connect_sdb(**aws_config)
         domain = sdb.get_domain('awsapp')
         item = domain.get_item(id)
-        
+        if not item:
+            pass
+        print item
         old_checksum = item['__checksum__']
         field_checksum = item['__field_checksum__']
         del item['__checksum__']
@@ -217,9 +227,9 @@ class Model(object):
             else:
                 raise Exception("Required field '%s' is not set" % field)
         # Load all the fields from the sdb item into the object
-        attr_chunks = {}
+        attr_chunks = {} # {'Content':['Content.1','Content.2']}
         for attr,value in item.items():
-            if attr == "__classname__":
+            if attr in ("__classname__"):
                 continue
             if attr[-4:] == ".len":
                 base = attr.split(".len")[0]
@@ -249,7 +259,7 @@ class Model(object):
         self.__to_dict()
         sdb = boto.connect_sdb(**aws_config)
         domain = sdb.get_domain('awsapp')
-        domain.delete_attributes(self.ID,["Origin"])
+        #domain.delete_attributes(self.ID,["Origin"])
         domain.put_attributes(self.ID, self.__dict, replace=True)
             
             

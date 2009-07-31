@@ -3,6 +3,7 @@ from datetime import datetime
 import random
 import string
 
+# Test class for py.test
 class TestFields:
     def random_string(self,n):
         return ''.join([random.choice(string.printable) for x in xrange(n)])
@@ -76,10 +77,11 @@ class TestFields:
         assert v2 == o
     def test_encrypt(self):
         f = EncryptedField()
-        s = self.random_string(24)
-        v1 = f.encode(s)
-        v2 = f.decode(v1)
-        assert v2 == s
+        sv = map(self.random_string,(15,16,17))
+        for s in sv:
+            v1 = f.encode(s)
+            v2 = f.decode(v1)
+            assert v2 == s
     def test_encrypt_long(self):
         f = EncryptedField()
         s = self.random_string(1024)
@@ -93,7 +95,6 @@ class TestFields:
         v2 = f.decode(v1)
         assert v1 == s
 
-
 class Author(Model):
     __hash_key__  = "%(Email)s"
     FirstName = Field(indexed=True,required=True)
@@ -101,6 +102,7 @@ class Author(Model):
     Email     = Field(indexed=True,required=True)
     Origin    = PickleField()
     BirthDay  = DateTimeField()
+    
     @property
     def Name(self):
         return "%s %s" % (self.FirstName, self.LastName)
@@ -113,46 +115,22 @@ class Recipe(Model):
     Original     = BooleanField(default=True)
     LastModified = DateTimeField(default=datetime.today())
 
+class Foo(Model):
+    __hash_key__ = "%(Bar)s"
+    Bar = Field()
+    Enc = EncryptedField()
+
 if __name__ == "__main__":
-    a = Author('2a7f6bdd7b88945c68726322811f47a3')
-    print a
-    print a.Origin
-    a.save()
-    exit()
-    #print a
-    
-    #r = Recipe('cd8ee30995a3f4afc046c226217d80a1')
+    #r = Recipe('7ebe81e6419f30b0dbd521e1872d681b')
+    #print r.Name
+    #print r.Content
+    #print r.Author.Name
+    #exit()
     #r.save()
     
-    a = Author(FirstName="David",Email="mumrah@gmail.com")
-    a.BirthDay = datetime.strptime("1985-02-04","%Y-%m-%d")
-    a.Origin = Recipe(Author=a) 
-    a.save()
-    print a
-    exit()
-    
-    
-    r = Recipe(Name="My Test Recipe",Author=a)
-    r.Content = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. In lectus massa,
-fermentum sit amet iaculis ac, luctus et purus. Nunc arcu velit, dictum nec
-congue cursus, luctus vitae risus. Pellentesque vel risus lacus. Sed adipiscing
-urna a leo pharetra sed tincidunt augue dignissim. Duis fringilla enim in nibh
-sagittis in tempor ante rhoncus. Class aptent taciti sociosqu ad litora torquent
-per conubia nostra, per inceptos himenaeos. Lorem ipsum dolor sit amet,
-consectetur adipiscing elit. Donec aliquet consequat lacus, et vulputate turpis
-interdum nec. Donec consectetur volutpat ipsum ut porta. Integer ornare mattis
-diam, vel volutpat magna pretium non. Praesent consequat rhoncus tincidunt.
-
-Nunc in ipsum vel magna laoreet dignissim. Etiam eu magna libero, at tempor
-lacus. Suspendisse sollicitudin odio ut augue convallis mattis. Duis erat nibh,
-gravida quis tempor non, faucibus eget nisi. Nulla facilisi. Nullam tristique,
-mi convallis congue varius, libero dui feugiat felis, sollicitudin eleifend
-lectus metus ac nibh. Mauris mauris nisl, ultricies eu blandit eget, dapibus id
-odio. Sed ac mattis ipsum. Aliquam blandit faucibus ante nec sodales. Nunc dolor
-sapien, bibendum vel congue ac, pharetra nec sem. Aenean eu ornare libero. Nam
-luctus mauris non mi pretium eget lacinia nisl sodales. Maecenas luctus risus
-sed turpis posuere consectetur. Aliquam varius, velit vel egestas accumsan, nibh
-magna vulputate enim, non iaculis lorem diam non nulla. Integer et odio enimrat, eu
-orci aliquam""".replace("\n","")
-    #print r
-    r.save()
+    #a = Author(FirstName="David",Email="mumrah@gmail.com")
+    #a.BirthDay = datetime.strptime("1985-02-04","%Y-%m-%d")
+    #a.Origin = Recipe(Author=a) 
+    #a.save()
+    #print a
+    #exit()
