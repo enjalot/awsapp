@@ -1,17 +1,17 @@
-import hashlib,time,zlib
+import hashlib,sys,time,zlib
 from math import ceil
 from datetime import datetime
 from cPickle import loads,dumps
 from Crypto.Cipher import AES
 import base64
+import boto
 
 import ConfigParser
 config = ConfigParser.ConfigParser()
-config.read("aws.conf")
+config.read("awsapp/aws.conf")
 aws_config = dict(config.items('aws'))
 crypt_config = dict(config.items('crypt'))
 
-import boto
 class Field(object):
     def __init__(self,required=False,indexed=False,label=None,default=None,**kwargs):
         self.required = required
@@ -199,7 +199,7 @@ class Model(object):
         item = domain.get_item(id)
         if not item:
             pass
-        print item
+        #print item
         old_checksum = item['__checksum__']
         field_checksum = item['__field_checksum__']
         del item['__checksum__']

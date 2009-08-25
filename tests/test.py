@@ -1,9 +1,12 @@
-from db import Model,Field,BooleanField,NumericField,DateTimeField,MoneyField,PickleField,EncryptedField
+from awsapp.db import Model,Field,BooleanField,NumericField,DateTimeField,MoneyField,PickleField,EncryptedField
 from datetime import datetime
 import random
 import string
+from nose.tools import *
 
-# Test class for py.test
+def check(a,b):
+    assert_equal(a,b)
+
 class TestFields:
     def random_string(self,n):
         return ''.join([random.choice(string.printable) for x in xrange(n)])
@@ -12,7 +15,7 @@ class TestFields:
         def test(b):
             v1 = f.encode(b)
             v2 = f.decode(v1)
-            assert b == v2
+            assert_equal(b,v2)
         yield test,True
         yield test,False
     def test_datetime(self):
@@ -21,15 +24,15 @@ class TestFields:
             d = datetime.today()
             v1 = f.encode(d)
             v2 = f.decode(v1)
-            assert v2 == d
+            assert_equal(v2,d)
         for i in range(4):
-            yield test
+            yield test,
     def test_numeric(self):
         f = NumericField()
         def test(v):
             v1 = f.encode(v)
             v2 = f.decode(v1)
-            assert v2 == v
+            assert_equal(v2,v)
         for x in (1,1.0,-1,-1.0):
             yield test,x
     def test_numeric_padding(self):
@@ -121,11 +124,11 @@ class Foo(Model):
     Enc = EncryptedField()
 
 if __name__ == "__main__":
-    #r = Recipe('7ebe81e6419f30b0dbd521e1872d681b')
-    #print r.Name
-    #print r.Content
-    #print r.Author.Name
-    #exit()
+    r = Recipe('7ebe81e6419f30b0dbd521e1872d681b')
+    print r.Name
+    print r.Content
+    print r.Author.Name
+    exit()
     #r.save()
     
     #a = Author(FirstName="David",Email="mumrah@gmail.com")
