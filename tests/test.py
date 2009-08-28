@@ -1,4 +1,5 @@
-from awsapp.db import Model,Field,BooleanField,NumericField,DateTimeField,MoneyField,PickleField,EncryptedField
+from awsapp.db.model import Model
+from awsapp.db.fields import Field,BooleanField,NumericField,DateTimeField,MoneyField,PickleField,EncryptedField
 from datetime import datetime
 import random
 import string

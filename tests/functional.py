@@ -2,6 +2,7 @@ import operator
 from functools import partial
 from awsapp.db.model import *
 from awsapp.db.fields import *
+from awsapp.db import Where,and_,or_,op
 
 class Author(Model):
     __hash_key__  = "%(Email)s"
@@ -29,13 +30,26 @@ class Foo(Model):
     Enc = EncryptedField()
 
 if __name__ == "__main__":
-    def cmpattr(a,b,c):
-        # Compares c.a with b
-        return getattr(c,a) == b
 
-    f = partial(cmpattr,'FirstName','David')
-    authors = filter(f,Author.objects.get())
-    for a in authors:
+    # These are used by ObjectModel - Users shouldn't really use 
+    # these directly, but whatever
+    w1 = Where('attr1','value1')
+    w2 = Where('attr2','value2')
+    w3 = Where('attr3','value3')
+
+    print and_(w1,or_(w3,w2))
+
+    #def cmpattr(a,b,c):
+    #    # Compares c.a with b
+    #    return getattr(c,a) == b
+    #f = partial(cmpattr,'FirstName','David')
+    #authors = filter(f,Author.objects.get())
+    #for a in authors:
+    #    print a.Name
+
+    authors = Author.objects.get(FirstName='David')
+    authors = Author.objects.filter(Author.FirstName,'David',op.eq)
+    for a in authors[::-1]:
         print a.Name
 
 

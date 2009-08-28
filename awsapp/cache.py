@@ -2,6 +2,7 @@
 # David Arthur, 2009
 # http://cloudcached.com
 
+
 import boto
 from cPickle import loads, dumps
 import datetime,hashlib

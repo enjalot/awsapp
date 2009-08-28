@@ -1,20 +1,23 @@
 import hashlib,sys,time,zlib
 from math import ceil
 import boto
-import operator
+from itertools import izip,count
 from awsapp.db.fields import Field
 from awsapp.config import *
 import logging
 
 class ObjectManager(object):
-    def __init__(self,cls,name,dict,parts=None,*args,**kwargs):
+    def __init__(self,cls,name,attrs,parts=None,*args,**kwargs):
         self.cls = cls
         self.name = name 
-        self.dict = dict
+        self.dict = attrs
         if parts:
             self.parts = parts
         else:
-            self.parts = {}
+            self.parts = dict(order_by=None,
+                where=["`__classname__` = '%s'" % self.name],
+                where_in=[],select=[])
+        
     def order_by(self,field):
         # Set the order_by field
         if self.parts.has_key('order_by'):
@@ -37,20 +40,51 @@ class ObjectManager(object):
         items = domain.select('SELECT * FROM `awsapp`')
         for item in items:
             domain.delete_item(item)
-    def filter(self,*args,**kwargs):
-        if len(args) == 2:
-            print args[1][0]
-        return self
+    def filter(self,field,value,op):
+        """
+        Filter the result set by a Model Field and a Value.
 
+        @type field: Field
+        @param field: A Field object which you want to filter
+
+        @type value: mixed
+        @param value: The value (or values) to filter Field by
+
+        @type op: string
+        @param op: The operator to apply the filter with
+
+        This method essentially builds up WHERE clauses for the subsequent query
+        to SimpleDB. Both single comparison and list-type operators apply. See
+        awsapp.db.op for a full list of operators
+        """
+        self.parts['where'] += ["`%s` %s '%s'" % (field.label,op,value)]
+        return self
     def get(self,*args,**kwargs):
+        for field,value in kwargs.items():
+            if field in self.cls.fields:
+                pass
+                #print "`%s`='%s'" %(self.cls.field_objs[field].label,value)
         # Will this actually do anything?
         return self
     def __compile(self):
-        self.__query = "SELECT * FROM `awsapp` WHERE `__classname__` = '%s'" % self.name
+        query_parts = ["SELECT * FROM `awsapp` WHERE"]
+        query_parts += [" AND ".join(self.parts['where'])]
+        self.__query = " ".join(query_parts)
+        print self.__query
     def __execute(self):
         sdb = boto.connect_sdb(**aws_config)
         domain = sdb.get_domain('awsapp')
         self.__results = domain.select( self.__query )
+    def __getitem__(self,x):
+        self.__compile()
+        self.__execute()
+        items = [item for item in self.__results].__getitem__(x)
+        results = []
+        for item in items:
+            o = self.cls()
+            o._load_from_dict(item)
+            results += [o]
+        return results
     def __iter__(self):
         # Execute the query, and yield the results
         self.__compile()
@@ -261,4 +295,5 @@ class Model(object):
         #domain.delete_attributes(self.ID,["Origin"])
         domain.put_attributes(self.ID, self.__dict, replace=True)
             
-            
+
+

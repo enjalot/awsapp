@@ -8,9 +8,9 @@ class Field(object):
     def __init__(self,required=False,indexed=False,label=None,default=None,**kwargs):
         self.required = required
         self.indexed = indexed
-        if not label:
-            label = self.__class__.__name__
-        self.label = unicode(label)
+        if label:
+           label = unicode(label)
+        self.label = label
         self.default = default
     def encode(self,v):
         if v == None:
