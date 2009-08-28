@@ -1,6 +1,7 @@
 import hashlib,sys,time,zlib
 from math import ceil
 import boto
+import operator
 from awsapp.db.fields import Field
 from awsapp.config import *
 import logging
@@ -36,6 +37,10 @@ class ObjectManager(object):
         items = domain.select('SELECT * FROM `awsapp`')
         for item in items:
             domain.delete_item(item)
+    def filter(self,*args,**kwargs):
+        if len(args) == 2:
+            print args[1][0]
+        return self
 
     def get(self,*args,**kwargs):
         # Will this actually do anything?
@@ -54,10 +59,33 @@ class ObjectManager(object):
             o = self.cls()
             o._load_from_dict(item)
             yield o 
+
 class ModelBase(type):
     def __init__(cls,*args,**kwargs):
         if args[0] != "Model":
             cls.objects = ObjectManager(cls,args[0],args[2])
+            cls.fields = []
+            cls.req_fields = []
+            cls.field_objs = {}
+            cls.refs = {}
+            if "__hash_key__" not in args[2].keys():
+                raise Exception("Required field '__hash_key__' is not set.")
+            for attr_name,attr in args[2].items():
+                if attr_name == u"ID":
+                    continue
+                # Handle Field attributes
+                if isinstance(attr,Field):
+                    if not attr.label:
+                        attr.label = attr_name
+                    if attr.required == True:
+                        cls.req_fields += [attr_name]
+                    cls.fields += [attr_name]
+                    cls.field_objs[attr_name] = attr
+                # Handle Model (reference) attributes
+                elif isinstance(attr,Model):
+                    cls.refs[attr_name] = attr
+                else:
+                    continue
 
 class Model(object):
     __metaclass__ = ModelBase
@@ -76,31 +104,36 @@ class Model(object):
         return v
     def __init__(self,*args,**kwargs):
         # Build a list of fields for this model
-        self.fields = []
-        self.req_fields = []
-        self.field_objs = {}
-        self.refs = {}
-        attrs = map(unicode,dir(self))
-        if "__hash_key__" not in attrs:
-            raise Exception("Required field '__hash_key__' is not set.")
-        for attr_name in attrs:
-            if attr_name == u"ID":
-                continue
-            attr = getattr(self,attr_name)
-            # Handle Field attributes
-            if isinstance(attr,Field):
-                if not attr.label:
-                    attr.label = attr_name
-                if attr.required == True:
-                    self.req_fields += [attr_name]
-                self.fields += [attr_name]
-                self.field_objs[attr_name] = attr
-                # Set default value
-                setattr(self,attr_name,attr.default)
-            # Handle Model (reference) attributes
-            elif isinstance(attr,Model):
-                self.refs[attr_name] = attr
-                setattr(self,attr_name,"")
+        #self.fields = []
+        #self.req_fields = []
+        #self.field_objs = {}
+        #self.refs = {}
+        #attrs = map(unicode,dir(self))
+        #if "__hash_key__" not in attrs:
+        #    raise Exception("Required field '__hash_key__' is not set.")
+        for attr_name,attr in self.field_objs.items():
+            setattr(self,attr_name,attr.default) 
+        for ref_name,ref in self.refs.items():
+            setattr(self,ref_name,"")
+            
+        #for attr_name in attrs:
+        #    if attr_name == u"ID":
+        #        continue
+        #    attr = getattr(self,attr_name)
+        #    # Handle Field attributes
+        #    if isinstance(attr,Field):
+        #        if not attr.label:
+        #            attr.label = attr_name
+        #        if attr.required == True:
+        #            self.req_fields += [attr_name]
+        #        self.fields += [attr_name]
+        #        self.field_objs[attr_name] = attr
+        #        # Set default value
+        #        setattr(self,attr_name,attr.default)
+        #    # Handle Model (reference) attributes
+        #    elif isinstance(attr,Model):
+        #        self.refs[attr_name] = attr
+        #        setattr(self,attr_name,"")
         # Handle arguments
         if len(args) == 1 and len(kwargs) == 0:
             # Got and ID, load the object

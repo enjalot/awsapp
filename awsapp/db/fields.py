@@ -8,6 +8,8 @@ class Field(object):
     def __init__(self,required=False,indexed=False,label=None,default=None,**kwargs):
         self.required = required
         self.indexed = indexed
+        if not label:
+            label = self.__class__.__name__
         self.label = unicode(label)
         self.default = default
     def encode(self,v):
@@ -16,7 +18,6 @@ class Field(object):
         return unicode(v)
     def decode(self,v):
         return v
-  
 class BooleanField(Field):
     def encode(self,value):
         if value not in (0,1):
@@ -49,11 +50,15 @@ class MoneyField(NumericField):
 
 class DateTimeField(Field):
     def encode(self,value):
+        if not value:
+            return u''
         if isinstance(value,datetime):
             return unicode(value.isoformat())
         else:
             raise TypeError("DateTimeField only accepts datetime objects")
     def decode(self,value):
+        if value == '':
+            return None
         parts = value.split(".")
         dt = datetime.strptime(parts[0],'%Y-%m-%dT%H:%M:%S')
         if len(parts) == 2:

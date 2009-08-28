@@ -1,3 +1,5 @@
+import operator
+from functools import partial
 from awsapp.db.model import *
 from awsapp.db.fields import *
 
@@ -27,13 +29,16 @@ class Foo(Model):
     Enc = EncryptedField()
 
 if __name__ == "__main__":
-    #a = Author(FirstName="David",Email="david@loud3r.com")
-    #a.BirthDay = datetime.strptime("1985-02-04","%Y-%m-%d")
-    #a.save()
+    def cmpattr(a,b,c):
+        # Compares c.a with b
+        return getattr(c,a) == b
 
-    authors = Author.objects.get()
+    f = partial(cmpattr,'FirstName','David')
+    authors = filter(f,Author.objects.get())
     for a in authors:
         print a.Name
+
+
     #r = Recipe('7ebe81e6419f30b0dbd521e1872d681b')
     #print r.Name
     #print r.Content
