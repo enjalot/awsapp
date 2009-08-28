@@ -2,6 +2,7 @@ from datetime import datetime
 from cPickle import loads,dumps
 from Crypto.Cipher import AES
 import base64
+from awsapp.config import *
 
 class Field(object):
     def __init__(self,required=False,indexed=False,label=None,default=None,**kwargs):

@@ -1,30 +1,63 @@
 import hashlib,sys,time,zlib
 from math import ceil
 import boto
-from awsapp.db import Field
-
-import ConfigParser
-config = ConfigParser.ConfigParser()
-config.read("awsapp/aws.conf")
-aws_config = dict(config.items('aws'))
-crypt_config = dict(config.items('crypt'))
+from awsapp.db.fields import Field
+from awsapp.config import *
+import logging
 
 class ObjectManager(object):
-    def __init__(self,cls,dict,*args,**kwargs):
+    def __init__(self,cls,name,dict,parts=None,*args,**kwargs):
         self.cls = cls
+        self.name = name 
         self.dict = dict
-    def get(self,*args,**kwargs):
-        if kwargs.has_key('order_by'):
-            field_name = kwargs['order_by']
-            field_obj = self.dict[field_name]
-            if field_obj.label != 'None':
-                field_name = field_obj.label
-            print "SELECT * FROM `domain` WHERE `__class__` = '%s' ORDER BY '%s'"% (self.cls,field_name)
+        if parts:
+            self.parts = parts
+        else:
+            self.parts = {}
+    def order_by(self,field):
+        # Set the order_by field
+        if self.parts.has_key('order_by'):
+            logging.warning("order by is already set, you are overriding it")
+        # If the user requests a non-existant field
+        if not self.dict.has_key(field):
+            logging.error("Invalid key for %s Model" % self.name)
+            return self
+        # See if the Field has a label
+        field_obj = self.dict[field]
+        if field_obj.label != 'None':
+            field = field_obj.label
+        # Set the order_by key in query parts dict 
+        self.parts['order_by'] = field
+        return self
+    def delete(self):
+        # This needs expanding
+        sdb = boto.connect_sdb(**aws_config)
+        domain = sdb.get_domain('awsapp')
+        items = domain.select('SELECT * FROM `awsapp`')
+        for item in items:
+            domain.delete_item(item)
 
+    def get(self,*args,**kwargs):
+        # Will this actually do anything?
+        return self
+    def __compile(self):
+        self.__query = "SELECT * FROM `awsapp` WHERE `__classname__` = '%s'" % self.name
+    def __execute(self):
+        sdb = boto.connect_sdb(**aws_config)
+        domain = sdb.get_domain('awsapp')
+        self.__results = domain.select( self.__query )
+    def __iter__(self):
+        # Execute the query, and yield the results
+        self.__compile()
+        self.__execute()
+        for item in self.__results:
+            o = self.cls()
+            o._load_from_dict(item)
+            yield o 
 class ModelBase(type):
     def __init__(cls,*args,**kwargs):
         if args[0] != "Model":
-            cls.objects = ObjectManager(args[0],args[2])
+            cls.objects = ObjectManager(cls,args[0],args[2])
 
 class Model(object):
     __metaclass__ = ModelBase
@@ -131,7 +164,8 @@ class Model(object):
         item = domain.get_item(id)
         if not item:
             pass
-        #print item
+        self._load_from_dict(item)
+    def _load_from_dict(self,item):
         old_checksum = item['__checksum__']
         field_checksum = item['__field_checksum__']
         del item['__checksum__']
@@ -139,15 +173,15 @@ class Model(object):
         
         # See that the checksum is correct
         if old_checksum == self.__checksum(item):
-            print "Checksum is OK (%s)" % old_checksum
+            logging.debug("Checksum is OK (%s)" % old_checksum)
         else:
-            print "Checksums do not match. Data integrity cannot be guaranteed"
+            logging.warning("Checksums do not match. Data integrity cannot be guaranteed")
         
         # See if the fields have changed
         if field_checksum == self.__field_checksum(self.fields + self.refs.keys()):
-            print "Object schema has not changed"
+            logging.debug("Object schema has not changed")
         else:
-            print "Schema has changed"
+            logging.warning("Schema has changed")
         # Check that this is the right class
         if item['__classname__'] != self.__class__.__name__:
             raise Exception("Classname mismatch: Expected '%s', got '%s'" % (
