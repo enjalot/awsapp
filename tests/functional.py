@@ -33,11 +33,11 @@ if __name__ == "__main__":
 
     # These are used by ObjectModel - Users shouldn't really use 
     # these directly, but whatever
-    w1 = Where('attr1','value1')
-    w2 = Where('attr2','value2')
-    w3 = Where('attr3','value3')
+    #w1 = Where('attr1','value1')
+    #w2 = Where('attr2','value2')
+    #w3 = Where('attr3','value3')
 
-    print and_(w1,or_(w3,w2))
+    #print and_(w1,or_(w3,w2))
 
     #def cmpattr(a,b,c):
     #    # Compares c.a with b
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     authors = Author.objects.get(FirstName='David')
     authors = Author.objects.filter(Author.FirstName,'David',op.eq)
     for a in authors[::-1]:
-        print a.Name
+        print a
 
 
     #r = Recipe('7ebe81e6419f30b0dbd521e1872d681b')

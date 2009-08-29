@@ -82,6 +82,7 @@ class ObjectManager(object):
         for item in items:
             o = self.cls()
             o._load_from_dict(item)
+            o._to_dict()
             results += [o]
         return results
     def __iter__(self):
@@ -120,22 +121,11 @@ class ModelBase(type):
 
 class Model(object):
     __metaclass__ = ModelBase
-    def __repr__(self):
-        return "<%s, %s>" % (self.__class__.__name__,self.ID)
-    @property
-    def ID(self):
-        self.checkFields()
-        #return '%s:%s' % (self.__class__.__name__,self.__hash_key__ % self )
-        return hashlib.md5(
-            '%s:%s' % (self.__class__.__name__,self.__hash_key__ % self)).hexdigest()
-    def __getitem__(self,k):
-        v = getattr(self,k,"")
-        #if isinstance(v,Model):
-        #    v = v.ID
-        return v
     def __init__(self,*args,**kwargs):
-        for attr_name,attr in self.field_objs.items():
-            setattr(self,attr_name,attr.default) 
+        # Set default values for fields
+        for field_name,field_obj in self.field_objs.items():
+            setattr(self,field_name,field_obj.default) 
+        # Create a placeholder for references
         for ref_name,ref in self.refs.items():
             setattr(self,ref_name,"")
         # Process arguments
@@ -151,6 +141,18 @@ class Model(object):
                     raise Exception("Undefined field '%s' for class '%s'" % (k,self.__class__.__name__))
         else:
             pass
+    def __repr__(self):
+        return "<%s, %s>" % (self.__class__.__name__,self.__dict)
+    @property
+    def ID(self):
+        self.checkFields()
+        return hashlib.md5(
+            '%s:%s' % (self.__class__.__name__,self.__hash_key__ % self)).hexdigest()
+    def __getitem__(self,k):
+        v = getattr(self,k,"")
+        #if isinstance(v,Model):
+        #    v = v.ID
+        return v
     def checkFields(self):
         for field in self.req_fields:
             if not getattr(self,field):
@@ -170,7 +172,7 @@ class Model(object):
             setattr(self,field,value)
         else:
             raise Exception("Undefined field '%s' for class '%s'" % (field,self.__class__.__name__))
-    def __to_dict(self):
+    def _to_dict(self):
         self.__dict = {}
         # Go through each field and encode the values
         for field_name,field_obj in self.field_objs.items():
@@ -179,6 +181,7 @@ class Model(object):
             if encoded_value == u"": # Don't try to split empty strings
                 self.__dict[field_name] = encoded_value
                 continue
+            # TODO: Move this to awsapp.util
             chunk = lambda v, l: [v[i*l:(i+1)*l] for i in range(int(ceil(len(v)/float(l))))]
             values = chunk(encoded_value,1000) # Make 1000 byte chunks
             if len(values) == 1:
@@ -203,19 +206,20 @@ class Model(object):
             pass
         self._load_from_dict(item)
     def _load_from_dict(self,item):
+        # Given an Item from SimpleDB, load it into an object
         old_checksum = item['__checksum__']
         field_checksum = item['__field_checksum__']
         del item['__checksum__']
         del item['__field_checksum__']
-        
-        # See that the checksum is correct
+        # Check data integrity first - see that the checksum is correct
         if old_checksum == self._checksum(item):
             logging.debug("Checksum is OK (%s)" % old_checksum)
         else:
             logging.warning("Checksums do not match. Data integrity cannot be guaranteed")
-        
         # See if the fields have changed
-        if field_checksum == self._field_checksum(self.field_objs.keys() + self.refs.keys()):
+        new_field_checksum = self._field_checksum(
+                self.field_objs.keys() + self.refs.keys())
+        if field_checksum == new_field_checksum:
             logging.debug("Object schema has not changed")
         else:
             logging.warning("Schema has changed")
@@ -230,9 +234,10 @@ class Model(object):
             else:
                 raise Exception("Required field '%s' is not set" % field)
         # Load all the fields from the sdb item into the object
-        attr_chunks = {} # {'Content':['Content.1','Content.2']}
+        attr_chunks = {} 
         for attr,value in item.items():
-            if attr in ("__classname__"):
+            # Attributes to ignore
+            if attr in ("__classname__","__next__","__prev__"):
                 continue
             if attr[-4:] == ".len":
                 base = attr.split(".len")[0]
@@ -259,10 +264,9 @@ class Model(object):
             setattr(self,attr,value)
     def save(self):
         self.checkFields()
-        self.__to_dict()
+        self._to_dict()
         sdb = boto.connect_sdb(**aws_config)
         domain = sdb.get_domain('awsapp')
-        #domain.delete_attributes(self.ID,["Origin"])
         domain.put_attributes(self.ID, self.__dict, replace=True)
             
 
