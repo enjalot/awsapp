@@ -17,7 +17,6 @@ class ObjectManager(object):
             self.parts = dict(order_by=None,
                 where=["`__classname__` = '%s'" % self.name],
                 where_in=[],select=[])
-        
     def order_by(self,field):
         # Set the order_by field
         if self.parts.has_key('order_by'):
@@ -61,7 +60,7 @@ class ObjectManager(object):
         return self
     def get(self,*args,**kwargs):
         for field,value in kwargs.items():
-            if field in self.cls.fields:
+            if field in self.cls.field_objs.keys():
                 pass
                 #print "`%s`='%s'" %(self.cls.field_objs[field].label,value)
         # Will this actually do anything?
@@ -98,7 +97,6 @@ class ModelBase(type):
     def __init__(cls,*args,**kwargs):
         if args[0] != "Model":
             cls.objects = ObjectManager(cls,args[0],args[2])
-            cls.fields = []
             cls.req_fields = []
             cls.field_objs = {}
             cls.refs = {}
@@ -113,7 +111,6 @@ class ModelBase(type):
                         attr.label = attr_name
                     if attr.required == True:
                         cls.req_fields += [attr_name]
-                    cls.fields += [attr_name]
                     cls.field_objs[attr_name] = attr
                 # Handle Model (reference) attributes
                 elif isinstance(attr,Model):
@@ -137,38 +134,11 @@ class Model(object):
         #    v = v.ID
         return v
     def __init__(self,*args,**kwargs):
-        # Build a list of fields for this model
-        #self.fields = []
-        #self.req_fields = []
-        #self.field_objs = {}
-        #self.refs = {}
-        #attrs = map(unicode,dir(self))
-        #if "__hash_key__" not in attrs:
-        #    raise Exception("Required field '__hash_key__' is not set.")
         for attr_name,attr in self.field_objs.items():
             setattr(self,attr_name,attr.default) 
         for ref_name,ref in self.refs.items():
             setattr(self,ref_name,"")
-            
-        #for attr_name in attrs:
-        #    if attr_name == u"ID":
-        #        continue
-        #    attr = getattr(self,attr_name)
-        #    # Handle Field attributes
-        #    if isinstance(attr,Field):
-        #        if not attr.label:
-        #            attr.label = attr_name
-        #        if attr.required == True:
-        #            self.req_fields += [attr_name]
-        #        self.fields += [attr_name]
-        #        self.field_objs[attr_name] = attr
-        #        # Set default value
-        #        setattr(self,attr_name,attr.default)
-        #    # Handle Model (reference) attributes
-        #    elif isinstance(attr,Model):
-        #        self.refs[attr_name] = attr
-        #        setattr(self,attr_name,"")
-        # Handle arguments
+        # Process arguments
         if len(args) == 1 and len(kwargs) == 0:
             # Got and ID, load the object
             self.load(args[0])
@@ -185,15 +155,16 @@ class Model(object):
         for field in self.req_fields:
             if not getattr(self,field):
                 raise Exception("Required field '%s' is not set" % field)
-    def __field_checksum(self,fields):
+    @classmethod
+    def _field_checksum(self,fields):
         fields.sort()
         return u"%x" % zlib.crc32( repr(fields) )
-    def __checksum(self,d):
+    @classmethod
+    def _checksum(self,d):
         keys = d.keys()
         keys.sort()
         out = zip( map(unicode,keys), map(unicode,map(d.get,keys)) )
         return u"%x" % zlib.crc32( repr(out) )
-            
     def setField(self,field,value):
         if hasattr(self,field):
             setattr(self,field,value)
@@ -202,17 +173,16 @@ class Model(object):
     def __to_dict(self):
         self.__dict = {}
         # Go through each field and encode the values
-        for field in self.fields:
-            value = self[field] 
-            field_obj = self.field_objs[field]
+        for field_name,field_obj in self.field_objs.items():
+            value = self[field_name] 
             encoded_value = field_obj.encode(value)
             if encoded_value == u"": # Don't try to split empty strings
-                self.__dict[field] = encoded_value
+                self.__dict[field_name] = encoded_value
                 continue
             chunk = lambda v, l: [v[i*l:(i+1)*l] for i in range(int(ceil(len(v)/float(l))))]
             values = chunk(encoded_value,1000) # Make 1000 byte chunks
             if len(values) == 1:
-                self.__dict[field] = values[0]
+                self.__dict[field_name] = values[0]
             else:
                 for value,i in zip(values,range(len(values))):
                     self.__dict['%s.%s' % (field,i+1)] = value
@@ -223,8 +193,8 @@ class Model(object):
             self.__dict[ref] = self[ref].ID # We only store the item ID
         # Set the __classname__ field so we know what kind of object we're storing
         self.__dict['__classname__'] = self.__class__.__name__
-        self.__dict['__checksum__'] = self.__checksum(self.__dict)
-        self.__dict['__field_checksum__'] = self.__field_checksum(self.fields + self.refs.keys())
+        self.__dict['__checksum__'] = self._checksum(self.__dict)
+        self.__dict['__field_checksum__'] = self._field_checksum(self.field_objs.keys() + self.refs.keys())
     def load(self,id):
         sdb = boto.connect_sdb(**aws_config)
         domain = sdb.get_domain('awsapp')
@@ -239,13 +209,13 @@ class Model(object):
         del item['__field_checksum__']
         
         # See that the checksum is correct
-        if old_checksum == self.__checksum(item):
+        if old_checksum == self._checksum(item):
             logging.debug("Checksum is OK (%s)" % old_checksum)
         else:
             logging.warning("Checksums do not match. Data integrity cannot be guaranteed")
         
         # See if the fields have changed
-        if field_checksum == self.__field_checksum(self.fields + self.refs.keys()):
+        if field_checksum == self._field_checksum(self.field_objs.keys() + self.refs.keys()):
             logging.debug("Object schema has not changed")
         else:
             logging.warning("Schema has changed")
@@ -266,14 +236,14 @@ class Model(object):
                 continue
             if attr[-4:] == ".len":
                 base = attr.split(".len")[0]
-                if base in self.fields:
+                if base in self.field_objs.keys():
                     attr_chunks[base] = []
                 continue
             if attr in self.refs:
                 attr_obj = self.refs[attr]
                 attr_obj.load(value)
                 setattr(self,attr,attr_obj)
-            if attr in self.fields:
+            if attr in self.field_objs.keys():
                 field_obj = self.field_objs[attr]
                 decoded_value = field_obj.decode(value)
                 setattr(self,attr,decoded_value)
