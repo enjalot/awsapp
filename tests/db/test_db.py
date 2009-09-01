@@ -1,5 +1,6 @@
 from awsapp.db.fields import *
 from awsapp.db.model import Model,ObjectManager
+from awsapp import db
 import zlib
 import nose
 from random import shuffle
@@ -31,6 +32,8 @@ class Test_ModelSuite:
         assert m.Field2 == u"Value2"
 
 class Test_DBSuite:
+    def test_comps(self):
+        pass 
     def test_objects(self):
         assert isinstance(TestModel.objects,ObjectManager)
     def test_get(self):

@@ -2,7 +2,7 @@ import operator
 from functools import partial
 from awsapp.db.model import *
 from awsapp.db.fields import *
-from awsapp.db import Where,and_,or_,op
+from awsapp import db
 
 class Author(Model):
     __hash_key__  = "%(Email)s"
