@@ -2,10 +2,11 @@ import operator
 from functools import partial
 from awsapp.db.model import *
 from awsapp.db.fields import *
-from awsapp.db import Where,and_,or_,op
+from awsapp import db
+#from awsapp.db import Where,and_,or_,op
 
 class Alert(Model):
-    __hash_key__="%(Title)s%(Date)s"
+    __hash_key__="%(title)s%(date)s"
     title = Field(indexed=True, required=True)
     author = Field(indexed=True, required=True)
     media = Field(indexed=True, required=True)
