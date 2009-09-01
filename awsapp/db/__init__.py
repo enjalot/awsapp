@@ -69,11 +69,13 @@ class where(object):
                 self.op = op
     def __repr__(self):
         if self.isSetComp:
-            return "`%s` %s (%s)" % (self.attr,self.op,','.join(["'%s'"%v for v in self.value]))
+            return u"`%s` %s (%s)" % (self.attr,self.op,','.join(["'%s'"%v for v in self.value]))
         else:
-            return "`%s` %s '%s'" % (self.attr,self.op,self.value)
+            return u"`%s` %s '%s'" % (self.attr,self.op,self.value)
+    def __str__(self):
+        return repr(self)
     def __cmp__(self,x):
-        return self.__repr__ == x
+        return repr(self) == x
 
 class where_every(where):
     def __init__(self,attr,value,op=None):
