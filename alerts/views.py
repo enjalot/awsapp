@@ -28,14 +28,12 @@ def alerts(request):
 def create(request):
     a = Alert(title="Numerical Recipes", author="I. Dunnough", media="TV", date=datetime.now(), level=8)
     a.save()
-    b = Alert(title="Goosebumps", author="RL Stien", media="Magazine", date=datetime.now(), level=3)
-    b.save()
-    c = Alert(title="Boondocks", author="A. McGregor", media="TV", date=datetime.now(), level=5)
-    c.save()
-    d = Alert(title="Mining for Gold", author="I.P. Freely", media="Web", date=datetime.now(), level=10)
-    als += [d.save()]
-    #print a
-    #print als
+    #b = Alert(title="Goosebumps", author="RL Stien", media="Magazine", date=datetime.now(), level=3)
+    #b.save()
+    #c = Alert(title="Boondocks", author="A. McGregor", media="TV", date=datetime.now(), level=5)
+    #c.save()
+    #d = Alert(title="Mining for Gold", author="I.P. Freely", media="Web", date=datetime.now(), level=10)
+    #d.save()
     alerts = Alert.objects.get()[::]
     print "alerts", alerts
     return {'alerts': alerts}
