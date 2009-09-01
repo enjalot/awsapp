@@ -5,7 +5,8 @@ from django.core.urlresolvers import reverse
 
 from django.conf import settings
 
-from motoproto.alerts.models import *
+#from motoproto.alerts.models import *
+from motoproto.alerts.awsmodels import *
 
 from motoproto.utils import render_to
 
@@ -16,6 +17,32 @@ def index(request):
 
 @render_to('alerts/index.html')
 def alerts(request):
-    alerts = Alert.objects.all().order_by('-date')
+    #alerts = Alert.objects.all().order_by('-date')
+    a = Alert(title="Numerical Recipes", author="I. Dunnough", media="TV", date=datetime.now(), level=8)
+    a.save()
+    alerts = Alert.objects.get()
+
+    
     return {'alerts': alerts} 
+
+
+@render_to('alerts/create.html')
+def create(request):
+    als = []
+    a = Alert(title="Numerical Recipes", author="I. Dunnough", media="TV", date=datetime.now(), level=8)
+    a.save()
+    als = [a.save()]
+    b = Alert(title="Goosebumps", author="RL Stien", media="Magazine", date=datetime.now(), level=3)
+    als += [b.save()]
+    c = Alert(title="Boondocks", author="A. McGregor", media="TV", date=datetime.now(), level=5)
+    als += [c.save()]
+    d = Alert(title="Mining for Gold", author="I.P. Freely", media="Web", date=datetime.now(), level=10)
+    als += [d.save()]
+    print a
+    print als
+    alerts = Alert.objects.get()
+    print "alerts", alerts
+    return {'alerts': alerts}
+
+
 

@@ -3,3 +3,4 @@ db.db
 settings.py
 data/www/media
 *.swp
+aws.conf
