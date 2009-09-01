@@ -20,9 +20,7 @@ def alerts(request):
     #alerts = Alert.objects.all().order_by('-date')
     a = Alert(title="Numerical Recipes", author="I. Dunnough", media="TV", date=datetime.now(), level=8)
     a.save()
-    alerts = Alert.objects.get()
-
-    
+    alerts = Alert.objects.get()[::]
     return {'alerts': alerts} 
 
 
@@ -38,9 +36,9 @@ def create(request):
     als += [c.save()]
     d = Alert(title="Mining for Gold", author="I.P. Freely", media="Web", date=datetime.now(), level=10)
     als += [d.save()]
-    print a
-    print als
-    alerts = Alert.objects.get()
+    #print a
+    #print als
+    alerts = Alert.objects.get()[::]
     print "alerts", alerts
     return {'alerts': alerts}
 
