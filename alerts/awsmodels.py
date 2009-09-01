@@ -11,7 +11,10 @@ class Alert(Model):
     media = Field(indexed=True, required=True)
     level = Field(indexed=True, required=True)
     date = DateTimeField()
-    
+   
+    def __unicode__(self): 
+        return "%s - %s" % (self.title, self.author)
+
     @property
     def get_media_display(self):
-        return "%s - %s" % (self.title, self.author)
+        return self.media
