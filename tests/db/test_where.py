@@ -4,6 +4,9 @@ from awsapp import db
 from datetime import datetime
 import nose
 
+import logging
+logging.basicConfig(level=logging.ERROR)
+
 # The test Model
 class TestModel(Model):
     __hash_key__ = "%(Field1)s"

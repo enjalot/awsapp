@@ -36,7 +36,7 @@ class ObjectManager(object):
         # This needs expanding
         sdb = boto.connect_sdb(**aws_config)
         domain = sdb.get_domain('awsapp')
-        items = domain.select('SELECT * FROM `awsapp`')
+        items = domain.select("SELECT * FROM `awsapp` WHERE `__classname__` = '%s'" % self.name)
         for item in items:
             domain.delete_item(item)
     def filter(self,field,value,op):
