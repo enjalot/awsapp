@@ -1,0 +1,4 @@
+*.pyc
+db.db
+settings.py
+data/www/media

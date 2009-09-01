@@ -1,0 +1,142 @@
+/*========================
+    CCAlert
+-Default Overrides
+-Structure
+-Reusable Classes
+=========================*/
+body, html {
+    font-family:"trebuchet ms",verdana,tahoma,verdana,sans-serif;
+    font-size:1em;
+    margin:0;
+    padding:0;
+    text-align:left;
+}
+
+a {
+	border-bottom:1px dotted #336699;
+	color:#336699;
+	text-decoration:none;
+}
+
+ul {
+    margin:0;
+    padding:0;
+}
+h1,h2,h3,h4 {
+    font-size:1em;
+    margin:0;
+    padding:0;
+}
+/*====================
+Structure
+=====================*/
+
+/*==================
+header
+===================*/
+#header {
+    height:75px;
+    position:relative;
+}
+
+
+/*=====================
+Navigation
+=====================*/
+#navigationWrapper {
+    float:left;
+    margin:0 1% 0 0;
+    padding:0;
+    position:relative;
+	width:19%;
+}
+    #siteNavWrapper {
+        margin:0 0 10px 0;
+        position:relative;
+    }
+        #siteNav {
+            background:#dedede;
+            -moz-border-radius:3px;
+            -webkit-border-radius:3px;
+            padding:5px;
+        }
+    
+    #subscriptionsWrapper {
+        position:relative;
+    }
+        #subscriptions {
+            background:#efefef;
+            -moz-border-radius:3px;
+            -webkit-border-radius:3px;
+            padding:5px;
+        }
+/*=====================
+Content
+=====================*/
+#contentWrapper {
+    float:left;
+    font-size:.9em;
+    position:relative;
+	width:80%;
+}
+	#content {
+		border:1px solid #dedede;
+		-moz-border-radius:3px;
+		-webkit-border-radius:3px;
+	}
+	#contentBar {
+	    background:#dddddd;
+	    height:35px;
+	    padding:2px;
+        position:relative;
+    }   
+        #breadCrumbs {
+            font-size:1.2em;
+            line-height:1.7em;
+        }
+        #alertListOptions {
+            position:absolute;
+            right:5px;
+            bottom:0;
+        }
+        #contentBarResults {
+            background:#cdcdcd;
+            height:20px;
+            padding:2px;
+        }
+        /*=====================
+        Content
+        =====================*/
+        .alertWrapper {
+            border:1px solid #898989;
+            background:#ffffff;
+            margin:1% 1% 1.5% 1%;
+            -moz-border-radius:3px;
+            -webkit-border-radius:3px;
+            position:relative;
+        }
+            .alert {
+                padding:5px;
+            }
+
+
+
+
+
+/*================
+Classes
+=================*/
+/*Structure Related Classes*/
+.alerts {
+	
+}
+.clear {
+    clear:both;
+}
+
+.alertTitle {   
+}
+
+.notification {
+	line-height:1.3em;
+}
