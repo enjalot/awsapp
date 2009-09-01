@@ -14,7 +14,8 @@ def index(request):
     return {'hello': "Hello B&N"}
 
 
-@render_to('alerts/alerts.html')
+@render_to('alerts/index.html')
 def alerts(request):
-    return {'alerts': ['alert1', 'alert2']} 
+    alerts = Alert.objects.all().order_by('-date')
+    return {'alerts': alerts} 
 

@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib import admin
+
 
 ALERT_MEDIA = (
     (1, 'TV'),
@@ -23,5 +25,8 @@ class Alert(models.Model):
     #importance level of the alert (MOTOR's measure?)
     level = models.IntegerField(default=1)
 
+    def __unicode__(self):
+        return "%s - %s" % (self.title, self.author)
 
+admin.site.register(Alert)
 

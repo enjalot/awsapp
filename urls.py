@@ -10,7 +10,7 @@ urlpatterns = patterns('',
     # Example:
     # (r'^motoproto/', include('motoproto.foo.urls')),
 
-    url(r'^$', 'motoproto.alerts.views.index', name="index"),        #this view could be changed
+    url(r'^$', 'motoproto.alerts.views.alerts', name="index"),        #this view could be changed
     url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'users/login.html'}, name="login"),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'template_name': 'users/logout.html', 'next_page':'/%s' % settings.BASE_URL}, name="logout"),
 
