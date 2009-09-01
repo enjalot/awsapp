@@ -10,6 +10,9 @@
     <script src="{{ MEDIA_URL }}js/Roar.js" type="text/javascript"></script>   
     
     <title>CC Alert</title>
+
+	{% block extrahead %}
+	{% endblock %}
 </head>
 <script type="text/javascript">
     var queue;
@@ -41,26 +44,30 @@
         <!-- Left Side -->
         <div id="navigationWrapper">
             <div id="navigation">
-            
+            	
                 <div id="siteNavWrapper">
                     <div id="siteNav">
+						{% block siteNav %}
                         <ul>        
                             <li>Home</li>
                             <li>All Alerts</li>
                             <li>Popular Mentions?</li>
                         </ul>
+						{% endblock %}
                     </div>
                 </div>
                 <div id="subscriptions">
-                    Subscriptions | Add
-                    <dl>
-                        <dt>Shows</dt>
-                            <dd>Colbert</dd>
-                            <dd>Oprah</dd>
-                        <dt>Books</dt>
-                            <dd>HitchHiker's Guide..</dd>
-                            <dd>Python For N00bs</dd>
-                    </dl>
+					{% block subscriptions %}
+	                    Subscriptions | Add
+	                    <dl>
+	                        <dt>Shows</dt>
+	                            <dd>Colbert</dd>
+	                            <dd>Oprah</dd>
+	                        <dt>Books</dt>
+	                            <dd>HitchHiker's Guide..</dd>
+	                            <dd>Python For N00bs</dd>
+	                    </dl>
+					{% endblock %}
                 </div>
             </div>
         </div>
@@ -75,10 +82,12 @@
                     <div id="alertListOptions">List - Details</div>
                 </div>
                 <div id="contentBarResults">
-                    1,337 Results | Mark All as Read
+					{% block contentResults %}
+                    	1,337 Results | Mark All as Read
+					{% endblock %}
                 </div>
                 <div id="alerts"> <!-- This will be populated with some ajax call -->
-                
+                	{% block content %}
                     <!-- Individul alert -->
                     <div class="alertWrapper">
                         <div id="alert_1" class="alert">
@@ -94,6 +103,7 @@
                             Bla bla bla
                         </div>
                     </div>
+					{% endblock %}
                 </div>
                 
             </div>
