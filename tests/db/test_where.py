@@ -108,7 +108,10 @@ def test_where_e6():
     v = 42.7
     yield assert_equals,db.where_every(TestModel.Field3,(v,v)),"every(`Field3`) IN ('%(v)s','%(v)s')" % dict(v=TestModel.Field3.encode(v))
 
-
 # Test simple combined clauses
+def test_where_and1():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    yield assert_equals,db.and_(c1,c2),"`attr1` = 'value1' AND `attr2` = 'value2'"
 
 # Test complex combined clauses
