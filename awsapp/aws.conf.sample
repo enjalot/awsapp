@@ -1,0 +1,7 @@
+[aws]
+aws_access_key_id = <Your AWS Access Key ID> 
+aws_secret_access_key = <Your AWS Secret Access Key> 
+
+[crypt]
+key = abc123
+cipher = AES #Not implemented
