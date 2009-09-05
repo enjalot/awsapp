@@ -114,4 +114,16 @@ def test_where_and1():
     c2 = db.where('attr2','value2')
     yield assert_equals,db.and_(c1,c2),"`attr1` = 'value1' AND `attr2` = 'value2'"
 
+def test_where_and2():
+    c1 = db.where(TestModel.Field1,'value1')
+    c2 = db.where(TestModel.Field1,'value2')
+    yield assert_equals,db.and_(c1,c2),"`Field1` = 'value1' AND `Field1` = 'value2'"
+
+def test_where_compound():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr2','value3')
+    yield assert_equals,db.and_(db.or_(c2,c3),c1),"(`attr2` = 'value2' OR `attr2` = 'value3') AND `attr1` = 'value1'"
+
+
 # Test complex combined clauses
