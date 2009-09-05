@@ -114,4 +114,41 @@ def test_where_and1():
     c2 = db.where('attr2','value2')
     yield assert_equals,db.and_(c1,c2),"`attr1` = 'value1' AND `attr2` = 'value2'"
 
+def test_where_or1():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    yield assert_equals,db.or_(c1,c2),"`attr1` = 'value1' OR `attr2` = 'value2'"
+
+
+# Test the basic clauses with Fields
+
+#2 combinations
+def test_where_and_and():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr3','value3')
+    yield assert_equals,db.and_(db.and_(c2,c3),c1),"(`attr2` = 'value2' AND `attr3` = 'value3') AND `attr1` = 'value1'"
+
+def test_where_or_or():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr3','value3')
+    yield assert_equals,db.or_(db.or_(c2,c3),c1),"(`attr2` = 'value2' OR `attr3` = 'value3') OR `attr1` = 'value1'"
+
+def test_where_and_or():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr3','value3')
+    yield assert_equals,db.and_(db.or_(c2,c3),c1),"(`attr2` = 'value2' OR `attr3` = 'value3') AND `attr1` = 'value1'"
+
+def test_where_or_and():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr3','value3')
+    yield assert_equals,db.or_(db.and_(c2,c3),c1),"(`attr2` = 'value2' AND `attr3` = 'value3') OR `attr1` = 'value1'"
+
+
+
 # Test complex combined clauses
+
+
