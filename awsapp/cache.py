@@ -100,7 +100,7 @@ class Client:
         return True
 
 
-class cached(object):
+class cached:
     def __init__(self,expires):
         self.client = Client(self.aws_access_key_id,self.aws_secret_access_key)
         self.expires = expires
@@ -119,5 +119,3 @@ class cached(object):
                 self.client.put(key,value,time_to_expire=self.expires,replace=True)
             return value
         return func
-    ~                                                                                                              
-        ~
