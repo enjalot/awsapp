@@ -119,11 +119,104 @@ def test_where_and2():
     c2 = db.where(TestModel.Field1,'value2')
     yield assert_equals,db.and_(c1,c2),"`Field1` = 'value1' AND `Field1` = 'value2'"
 
-def test_where_compound():
+def test_where_or1():
     c1 = db.where('attr1','value1')
     c2 = db.where('attr2','value2')
-    c3 = db.where('attr2','value3')
-    yield assert_equals,db.and_(db.or_(c2,c3),c1),"(`attr2` = 'value2' OR `attr2` = 'value3') AND `attr1` = 'value1'"
+    yield assert_equals,db.or_(c1,c2),"`attr1` = 'value1' OR `attr2` = 'value2'"
+
+def test_where_or2():
+    v1 = 'value1'
+    v2 = datetime.now()
+    c1 = db.where(TestModel.Field1,v1)
+    c2 = db.where(TestModel.Field2,v2)
+    yield assert_equals,db.or_(c1,c2),"`Field1` = '%s' OR `Field2` = '%s'" % (v1, TestModel.Field2.encode(v2))
+
+
+
+#2 combinations
+def test_where_and_and1():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr3','value3')
+    yield assert_equals,db.and_(db.and_(c2,c3),c1),"(`attr2` = 'value2' AND `attr3` = 'value3') AND `attr1` = 'value1'"
+
+def test_where_and_and2():
+    t = {}
+    t['v1'] = 'value1'
+    t['v2'] = datetime.now()
+    t['v3'] = 42
+    c1 = db.where(TestModel.Field1,t['v1'])
+    c2 = db.where(TestModel.Field2,t['v2'])
+    c3 = db.where(TestModel.Field3,t['v3'])
+    t['v1'] = TestModel.Field1.encode(t['v1'])
+    t['v2'] = TestModel.Field2.encode(t['v2'])
+    t['v3'] = TestModel.Field3.encode(t['v3'])
+    yield assert_equals,db.and_(db.and_(c2,c3),c1),"(`Field2` = '%(v2)s' AND `Field3` = '%(v3)s') AND `Field1` = '%(v1)s'" % t
+
+
+def test_where_or_or1():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr3','value3')
+    yield assert_equals,db.or_(db.or_(c2,c3),c1),"(`attr2` = 'value2' OR `attr3` = 'value3') OR `attr1` = 'value1'"
+
+def test_where_or_or2():
+    t = {}
+    t['v1'] = 'value1'
+    t['v2'] = datetime.now()
+    t['v3'] = 42
+    c1 = db.where(TestModel.Field1,t['v1'])
+    c2 = db.where(TestModel.Field2,t['v2'])
+    c3 = db.where(TestModel.Field3,t['v3'])
+    t['v1'] = TestModel.Field1.encode(t['v1'])
+    t['v2'] = TestModel.Field2.encode(t['v2'])
+    t['v3'] = TestModel.Field3.encode(t['v3'])
+
+    yield assert_equals,db.or_(db.or_(c2,c3),c1),"(`Field2` = '%(v2)s' OR `Field3` = '%(v3)s') OR `Field1` = '%(v1)s'" % t
+
+
+def test_where_and_or1():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr3','value3')
+    yield assert_equals,db.and_(db.or_(c2,c3),c1),"(`attr2` = 'value2' OR `attr3` = 'value3') AND `attr1` = 'value1'"
+
+def test_where_and_or2():
+    t = {}
+    t['v1'] = 'value1'
+    t['v2'] = datetime.now()
+    t['v3'] = 42
+    c1 = db.where(TestModel.Field1,t['v1'])
+    c2 = db.where(TestModel.Field2,t['v2'])
+    c3 = db.where(TestModel.Field3,t['v3'])
+    t['v1'] = TestModel.Field1.encode(t['v1'])
+    t['v2'] = TestModel.Field2.encode(t['v2'])
+    t['v3'] = TestModel.Field3.encode(t['v3'])
+
+    yield assert_equals,db.and_(db.or_(c2,c3),c1),"(`Field2` = '%(v2)s' OR `Field3` = '%(v3)s') AND `Field1` = '%(v1)s'" % t
+
+
+def test_where_or_and1():
+    c1 = db.where('attr1','value1')
+    c2 = db.where('attr2','value2')
+    c3 = db.where('attr3','value3')
+    yield assert_equals,db.or_(db.and_(c2,c3),c1),"(`attr2` = 'value2' AND `attr3` = 'value3') OR `attr1` = 'value1'"
+
+def test_where_or_and2():
+    t = {}
+    t['v1'] = 'value1'
+    t['v2'] = datetime.now()
+    t['v3'] = 42
+    c1 = db.where(TestModel.Field1,t['v1'])
+    c2 = db.where(TestModel.Field2,t['v2'])
+    c3 = db.where(TestModel.Field3,t['v3'])
+    t['v1'] = TestModel.Field1.encode(t['v1'])
+    t['v2'] = TestModel.Field2.encode(t['v2'])
+    t['v3'] = TestModel.Field3.encode(t['v3'])
+
+    yield assert_equals,db.or_(db.and_(c2,c3),c1),"(`Field2` = '%(v2)s' AND `Field3` = '%(v3)s') OR `Field1` = '%(v1)s'" % t
 
 
 # Test complex combined clauses
+
+
