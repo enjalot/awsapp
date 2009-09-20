@@ -47,10 +47,11 @@ if __name__ == "__main__":
     #for a in authors:
     #    print a.Name
 
-    authors = Author.objects.get(FirstName='David')
-    authors = Author.objects.filter(Author.FirstName,'David',op.eq)
-    for a in authors[::-1]:
-        print a
+    foo = Author.objects.create(FirstName='David')
+    print foo
+
+    #for a in authors[::-1]:
+    #    print a
 
 
     #r = Recipe('7ebe81e6419f30b0dbd521e1872d681b')

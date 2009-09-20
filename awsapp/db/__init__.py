@@ -18,7 +18,7 @@ GEQ = operator('Greater Than or Equals','>=',False)
 IN  = operator('In','IN',True)
 NIN = operator('Not In','NOT IN',True)
 
-class Comp(object):
+class CompoundWhere(object):
     def __init__(self,cmp,a,b):
         self.a = a
         self.b = b
@@ -27,11 +27,11 @@ class Comp(object):
         else:
             raise ValueError("cmp can only be a valid SQL comparison operator: AND or OR")
     def __repr__(self):
-        if isinstance(self.a,Comp) and isinstance(self.b,Comp):
+        if isinstance(self.a,CompoundWhere) and isinstance(self.b,CompoundWhere):
             return "(%s) %s (%s)" % (self.a,self.cmp,self.b)
-        elif isinstance(self.a,Comp):
+        elif isinstance(self.a,CompoundWhere):
             return "(%s) %s %s" % (self.a,self.cmp,self.b)
-        elif isinstance(self.b,Comp):
+        elif isinstance(self.b,CompoundWhere):
             return "%s %s (%s)" % (self.a,self.cmp,self.b)
         else:
             return "%s %s %s" % (self.a,self.cmp,self.b)
@@ -49,31 +49,31 @@ class where(object):
         self.attr = attr.label
         # See if value was actually a list of values
         if type(value) in (list,tuple):
-            self.isSetComp = True
+            self.isSetCompoundWhere = True
             self.value = map(attr.encode,value)
         else:
-            self.isSetComp = False
+            self.isSetCompoundWhere = False
             self.value = attr.encode(value)
         # If no operator was specified, default to EQ or IN
         if not op:
-            if self.isSetComp:
+            if self.isSetCompoundWhere:
                 self.op = IN
             else:
                 self.op = EQ
         else:
-            if self.isSetComp and op in (IN,NIN):
+            if self.isSetCompoundWhere and op in (IN,NIN):
                 self.op = op
-            elif self.isSetComp and op not in (IN,NIN):
+            elif self.isSetCompoundWhere and op not in (IN,NIN):
                 raise ValueError("Set-based Where clauses can only use the db.IN or db.NIN operators")
             else:
                 self.op = op
     def __repr__(self):
-        if self.isSetComp:
+        if self.isSetCompoundWhere:
             return u"`%s` %s (%s)" % (self.attr,self.op,','.join(["'%s'"%v for v in self.value]))
         else:
             return u"`%s` %s '%s'" % (self.attr,self.op,self.value)
     def __str__(self):
-        return repr(self)
+        return repr(self) 
     def __cmp__(self,x):
         return repr(self) == x
 
@@ -82,12 +82,12 @@ class where_every(where):
         where.__init__(self,attr,value,op)
         self.attr = "every(`%s`)" % self.attr
     def __repr__(self):
-        if self.isSetComp:
+        if self.isSetCompoundWhere:
             return "%s %s (%s)" % (self.attr,self.op,','.join(["'%s'"%v for v in self.value]))
         else:
             return "%s %s '%s'" % (self.attr,self.op,self.value)
 
-and_ = partial(Comp,"AND")
-or_  = partial(Comp,"OR")
+and_ = partial(CompoundWhere,"AND")
+or_  = partial(CompoundWhere,"OR")
 
 

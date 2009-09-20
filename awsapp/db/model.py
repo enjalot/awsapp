@@ -1,10 +1,16 @@
-import hashlib,sys,time,zlib
-from math import ceil
-import boto
+import hashlib
 from itertools import izip,count
+import logging
+from math import ceil
+import sys
+import time
+import zlib
+
+import boto
+
+from awsapp.db import *
 from awsapp.db.fields import Field
 from awsapp.config import *
-import logging
 
 class ObjectManager(object):
     def __init__(self,cls,name,attrs,parts=None,*args,**kwargs):
@@ -17,6 +23,8 @@ class ObjectManager(object):
             self.parts = dict(order_by=None,
                 where=["`__classname__` = '%s'" % self.name],
                 where_in=[],select=[])
+    def create(self,*args,**kwargs):
+        return self.cls(*args,**kwargs)
     def order_by(self,field):
         # Set the order_by field
         if self.parts.has_key('order_by'):
@@ -40,34 +48,25 @@ class ObjectManager(object):
         for item in items:
             domain.delete_item(item)
     def filter(self,field,value,op):
-        """
-        Filter the result set by a Model Field and a Value.
-
-        @type field: Field
-        @param field: A Field object which you want to filter
-
-        @type value: mixed
-        @param value: The value (or values) to filter Field by
-
-        @type op: string
-        @param op: The operator to apply the filter with
-
-        This method essentially builds up WHERE clauses for the subsequent query
-        to SimpleDB. Both single comparison and list-type operators apply. See
-        awsapp.db.op for a full list of operators
-        """
-        self.parts['where'] += ["`%s` %s '%s'" % (field.label,op,value)]
+        self.parts['where'] += [where(field,value,op)]
         return self
+    def compound_filter(self,where):
+        if type(where) != CompoundWhere:
+            raise TypeError("First argument must be a CompoundWhere object")
+        self.parts['where'] += [where]
+        return self
+    def all(self):
+        return self[:]
     def get(self,*args,**kwargs):
         for field,value in kwargs.items():
             if field in self.cls.field_objs.keys():
+                print "`%s`='%s'" %(self.cls.field_objs[field].label,value)
                 pass
-                #print "`%s`='%s'" %(self.cls.field_objs[field].label,value)
         # Will this actually do anything?
         return self
     def __compile(self):
         query_parts = ["SELECT * FROM `awsapp` WHERE"]
-        query_parts += [" AND ".join(self.parts['where'])]
+        query_parts += [" AND ".join(map(unicode,self.parts['where']))]
         self.__query = " ".join(query_parts)
         print self.__query
     def __execute(self):
@@ -142,7 +141,7 @@ class Model(object):
         else:
             pass
     def __repr__(self):
-        return "<%s, %s>" % (self.__class__.__name__,self.__dict)
+        return "<%s, %s>" % (self.__class__.__name__,self.__dict__)
     @property
     def ID(self):
         self.checkFields()
