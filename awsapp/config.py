@@ -1,11 +1,10 @@
 import ConfigParser
-try:
-    import settings
-    conf_path = settings.AWS_CONF_PATH
-except:
-    conf_path = 'awsapp/aws.conf'
+import os
 
-config = ConfigParser.ConfigParser()
-config.read(conf_path)
+basepath = os.path.dirname(os.path.abspath(__file__))
+
+config = ConfigParser.RawConfigParser()
+config.read(os.path.join(basepath,'aws.conf'))
+
 aws_config = dict(config.items('aws'))
 crypt_config = dict(config.items('crypt'))
